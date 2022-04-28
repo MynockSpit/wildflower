@@ -30,9 +30,49 @@ function fixSourceControlPath(filepath) {
   return path.join(__dirname, '/valley/meadows', filepath)
 }
 
+function promiser() {
+  let stepIndex = 0
+  let steps = []
+
+  function getCurrentStep() {
+    if (!steps[stepIndex]) {
+      steps[stepIndex] = []
+    }
+    return steps[stepIndex]
+  }
+
+  function addToStep(step) {
+    getCurrentStep().push(step)
+  }
+
+  function newStep() {
+    // add a new step, but only if the previous step was actually used
+    if (getCurrentStep().length) {
+      stepIndex++
+    }
+  }
+
+  async function run() {
+    let results = []
+    for (let index = 0; step = steps[index]; index++) {
+      results = results
+        .concat(await Promise.all(step.map(step => step())))
+    }
+    return results
+  }
+
+  return {
+    addToStep,
+    newStep,
+    run
+  }
+}
+
+
 module.exports = {
   buildCopyOptions,
   fixInstalledPath,
   fixSourceControlPath,
-  logNoSuchFile
+  logNoSuchFile,
+  promiser
 }
